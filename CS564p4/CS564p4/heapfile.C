@@ -41,6 +41,7 @@ const Status destroyHeapFile(const string fileName)
 }
 
 // constructor opens the underlying file
+// 10/24/2012 JH: First implementation.
 HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
@@ -51,17 +52,30 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		// reads and pins header page in buffer pool
+        if ((status=filePtr->getFirstPage(headerPageNo))==OK) {
+            // read header page into temporary pointer first
+            
+            if ((status=bufMgr->readPage(filePtr, headerPageNo, pagePtr))==OK) {
+                // initialize header page
+                headerPage = (FileHdrPage*)pagePtr;
+                
+                // initialize header dirty flag
+                hdrDirtyFlag = false;
+                
+                
+                // read and pin first page
+                curPageNo = headerPage->firstPage;
+                if ((status=bufMgr->readPage(filePtr, curPageNo, curPage))==OK) {
+                    
+                    // initialize current page, record stats
+                    curDirtyFlag = false;
+                    curRec = NULLRID;
+                }
+                
+            }
+            
+        }
     }
     else
     {
