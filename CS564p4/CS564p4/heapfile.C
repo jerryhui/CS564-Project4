@@ -415,6 +415,7 @@ InsertFileScan::~InsertFileScan()
 }
 
 // Insert a record into the file
+// 10/29/2012 JH:   First implementation.
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
     Page*	newPage;
@@ -429,18 +430,45 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+    // Check if the last page is in memory; load if not.
+    if (headerPage->lastPage!=curPageNo) {
+        status=bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if (status!=OK) return status;
+        
+        status=bufMgr->readPage(filePtr, headerPage->lastPage, curPage);
+        if (status!=OK) return status;
+        curDirtyFlag = false;
+        curPageNo = headerPage->lastPage;
+    }
+    
+    // Try inserting the record
+    status = curPage->insertRecord(rec, rid);
+    if (status==NOSPACE) {
+        // Last page is full, create new page.
+        status=bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        if (status!=OK) return status;
+
+        status=bufMgr->allocPage(filePtr,newPageNo,newPage);
+        if (status!=OK) return status;
+                
+        // Update headers
+        newPage->init(newPageNo);
+        headerPage->pageCnt++;
+        headerPage->lastPage = newPageNo;
+        curPageNo = newPageNo;
+        curPage = newPage;
+                
+        // insert record
+        status = curPage->insertRecord(rec, rid);
+    }
+    // Update record-related header and return info
+    if (status==OK) {
+        outRid = rid;
+        headerPage->recCnt++;
+    }
+    
+    //done.
+    return status;
 }
 
 
