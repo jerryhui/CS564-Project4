@@ -122,6 +122,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 		returnStatus = status;
 		return;
     }
+    returnStatus = status;
 }
 
 // the destructor closes the file
@@ -287,6 +288,8 @@ const Status HeapFileScan::resetScan()
 }
 
 
+// HeapFileScan::scanNext
+//  10/31/2012 JH:  Debug-need to advance cursor
 const Status HeapFileScan::scanNext(RID& outRid)
 {
     Status 	status = OK;
@@ -338,6 +341,8 @@ const Status HeapFileScan::scanNext(RID& outRid)
                 curRec = nextRid;
                 markScan();
                 break;
+            } else {
+                tmpRid = nextRid;   // JH: advance record cursor
             }
         }
     }
@@ -468,7 +473,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
     }
 
     // Check if the last page is in memory; load if not.
-    if (headerPage->lastPage!=curPageNo) {
+    if (headerPage->lastPage != curPageNo) {
         status=bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
         if (status!=OK) return status;
         
