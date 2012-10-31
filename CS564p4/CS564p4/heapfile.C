@@ -316,7 +316,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
                 //BOOK KEEPING! (moving to next page)
                 bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
                 bufMgr->readPage(filePtr, nextPageNo, curPage);
-                curRec = NULLRID;
                 if (status != NORECORDS) {
                     curPageNo = nextPageNo;
                     curDirtyFlag = false;
@@ -487,6 +486,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         if (status!=OK) return status;
 
         curPage->setNextPage(newPageNo);
+        status=bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
         if (status!=OK) return status;
 
         // Update headers
