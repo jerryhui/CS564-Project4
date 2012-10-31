@@ -298,44 +298,45 @@ const Status HeapFileScan::scanNext(RID& outRid)
     int 	nextPageNo;
     Record      rec;
 
-    markScan() //used to initialize the markedPageNo and markedRec private data members on first iteration
+    markScan(); //used to initialize the markedPageNo and markedRec private data members on first iteration
 	       //returns OK every time so don't error check.
 	
     tmpRid = markedRec;
     //While we have not reached the end of the file
     while(status != FILEEOF)
     {
-	//if we've reached the end of a page
-	if (ENDOFPAGE != curPage->nextRecord(tempRid, nextRid)
-	{
-	    //Check for the end of the file
-	    if (-1 == curPage->getNextPage(nextPageNo))
-	   	status = FILEEOF;
-	}
-	//If not the end of the file, just move to the next page
-	else
-	{  
-	    //BOOK KEEPING! (moving to next page)
-	    bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-	    bufMgr->readPage(filePtr, nextPageNo, curPage);
-	    curPageNo = nextPageNo;
-	    curDirtyFlag = false;
-	    curRec = NULLRID;
-    	    continue;  	
-	}
-	//you're not at the end of a page, simply get the next record and compare it to scan criteria
-	else
-	{
-	    curPage->getRecord(nextRid, rec);
-	    //If the record is found
-	    if(matchRecord(rec))
-	    {
-		//set up the return value and mark it as the starting record for the next scanNext call
-	        outRid = nextRid;
-	    	markScan();
-	    	break;
-	    }
-	}
+        //if we've reached the end of a page
+        if (ENDOFPAGE != curPage->nextRecord(tmpRid, nextRid))
+        {
+            //Check for the end of the file
+            if (-1 == curPage->getNextPage(nextPageNo))
+            status = FILEEOF;
+
+            //If not the end of the file, just move to the next page
+            else
+            {  
+                //BOOK KEEPING! (moving to next page)
+                bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+                bufMgr->readPage(filePtr, nextPageNo, curPage);
+                curPageNo = nextPageNo;
+                curDirtyFlag = false;
+                curRec = NULLRID;
+                continue;
+            }
+        }
+        //you're not at the end of a page, simply get the next record and compare it to scan criteria
+        else
+        {
+            curPage->getRecord(nextRid, rec);
+            //If the record is found
+            if(matchRec(rec))
+            {
+            //set up the return value and mark it as the starting record for the next scanNext call
+                outRid = nextRid;
+                markScan();
+                break;
+            }
+        }
     }
     return status;	
 }
