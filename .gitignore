@@ -17,3 +17,13 @@ profile
 *.xcuserstate
 xcuserdata
 CS564p4/CS564p4.xcodeproj/project.xcworkspace/xcuserdata/JerryHui.xcuserdatad/UserInterfaceState.xcuserstate
+
+*.xcbkptlist
+
+*.xcscheme
+
+*.xcbkptlist
+
+CS564p4/CS564p4.xcodeproj/xcuserdata/JerryHui.xcuserdatad/xcdebugger/Breakpoints.xcbkptlist
+
+CS564p4/CS564p4.xcodeproj/xcuserdata/JerryHui.xcuserdatad/xcschemes/CS564p4.xcscheme
