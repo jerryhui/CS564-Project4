@@ -446,6 +446,7 @@ InsertFileScan::~InsertFileScan()
 
 // Insert a record into the file
 // 10/29/2012 JH:   First implementation.
+// 10/31/2012 JH:   Debug-set CurDirtyFlag when needed.
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
     Page*	newPage;
@@ -487,6 +488,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         headerPage->lastPage = newPageNo;
         curPageNo = newPageNo;
         curPage = newPage;
+        curDirtyFlag = false;
                 
         // insert record
         status = curPage->insertRecord(rec, rid);
@@ -494,6 +496,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
     // Update record-related header and return info
     if (status==OK) {
         outRid = rid;
+        curDirtyFlag = true;
         headerPage->recCnt++;
     }
     
