@@ -173,9 +173,6 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status status;
 
-    // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-   
-   
     if (rid.pageNo==curPageNo) {
         // requested page is currently pinned
         // find record and return
