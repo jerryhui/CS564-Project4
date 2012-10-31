@@ -303,22 +303,28 @@ const Status HeapFileScan::scanNext(RID& outRid)
     while(status != FILEEOF)
     {
         //if we've reached the end of a page
-        if (ENDOFPAGE != curPage->nextRecord(tmpRid, nextRid))
+        if (ENDOFPAGE == curPage->nextRecord(tmpRid, nextRid))
         {
             //Check for the end of the file
-            if (-1 == curPage->getNextPage(nextPageNo))
-            status = FILEEOF;
-
-            //If not the end of the file, just move to the next page
+            curPage->getNextPage(nextPageNo);
+            if (nextPageNo == -1) {
+                status = FILEEOF;
+            }
             else
             {  
+                //If not the end of the file, just move to the next page
                 //BOOK KEEPING! (moving to next page)
                 bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
                 bufMgr->readPage(filePtr, nextPageNo, curPage);
-                curPageNo = nextPageNo;
-                curDirtyFlag = false;
                 curRec = NULLRID;
-                continue;
+                if (status != NORECORDS) {
+                    curPageNo = nextPageNo;
+                    curDirtyFlag = false;
+                    curRec = NULLRID;
+                    tmpRid = NULLRID;
+                    continue;
+                } else
+                    return status;
             }
         }
         //you're not at the end of a page, simply get the next record and compare it to scan criteria
@@ -330,6 +336,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
             {
             //set up the return value and mark it as the starting record for the next scanNext call
                 outRid = nextRid;
+                curRec = nextRid;
                 markScan();
                 break;
             }
@@ -476,12 +483,12 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
     status = curPage->insertRecord(rec, rid);
     if (status==NOSPACE) {
         // Last page is full, create new page.
-        status=bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-        if (status!=OK) return status;
-
         status=bufMgr->allocPage(filePtr,newPageNo,newPage);
         if (status!=OK) return status;
-                
+
+        curPage->setNextPage(newPageNo);
+        if (status!=OK) return status;
+
         // Update headers
         newPage->init(newPageNo);
         headerPage->pageCnt++;
