@@ -41,6 +41,7 @@ const Status createHeapFile(const string fileName)
         
         //initialize values of the header page
         fileName.copy(hdrPage->fileName, fileName.size(), 0);   // JH: use string::copy
+        hdrPage->fileName[fileName.size()]=NULL;
 
         hdrPage->pageCnt = 1;  //premtively setting the pageCnt to 1 because we'll be making the first data page next
         hdrPage->recCnt = 0;  //There are no records starting off.
